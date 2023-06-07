@@ -16,7 +16,6 @@ https://cdn.jsdelivr.net/npm/sweetalert2@11.7.11/dist/sweetalert2.min.css
         @include('includes.messages')
 
         <div class="col-2 p-2">
-
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#postCreateModal">Create New Post</button>
         </div>
         <div class="col-12">
@@ -70,59 +69,106 @@ https://cdn.jsdelivr.net/npm/sweetalert2@11.7.11/dist/sweetalert2.all.min.js
     <script>
         let table = new DataTable('#postTable');
 
-        $.ajaxSetup({
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            }
-        });
+        // $.ajaxSetup({
+        //     headers: {
+        //         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        //     }
+        // });
 
         $('#published_at').datetimepicker({
             format: 'YYYY-MM-DD hh:MM A'
         });
 
-       $('#postCreate').on('submit', function(e){
+       {{--$('#postCreate').on('submit', function(e){--}}
+       {{--     e.preventDefault();--}}
+       {{--     $.ajax({--}}
+       {{--         url: '{{ route('post.store')  }}',--}}
+       {{--         type: 'post',--}}
+       {{--         data: {--}}
+       {{--             _token: '{{ csrf_token() }}',--}}
+       {{--             title: $('#title').val(),--}}
+       {{--             short_description: $('#short_description').val(),--}}
+       {{--             description: $('#description').val(),--}}
+       {{--             published_at: $('#published_at').val(),--}}
+
+       {{--         },--}}
+       {{--         success: function(res){--}}
+       {{--             if(res.status){--}}
+       {{--                 Swal.fire({--}}
+       {{--                     title: 'Success!',--}}
+       {{--                     text: res.message,--}}
+       {{--                     icon: 'success',--}}
+       {{--                 });--}}
+       {{--                 $('#title').val('');--}}
+       {{--                 $('#short_description').val('');--}}
+       {{--                 $('#description').val('');--}}
+       {{--                 $('#published_at').val('');--}}
+
+       {{--                 $('#closePostCreateModal').trigger('click');--}}
+       {{--             }else{--}}
+       {{--                 Swal.fire({--}}
+       {{--                     title: 'Error!',--}}
+       {{--                     text: res.message,--}}
+       {{--                     icon: 'error',--}}
+       {{--                 });--}}
+       {{--             }--}}
+       {{--         },--}}
+       {{--         error: function(err){--}}
+       {{--            let errors = err.responseJSON.errors;--}}
+       {{--            $.each(errors, function(key, val){--}}
+       {{--                console.log(key + 'Error' , val.toString() );--}}
+       {{--                 $('#' + key + 'Error').html(val.toString());--}}
+       {{--            });--}}
+       {{--         },--}}
+       {{--     } );--}}
+       {{--})--}}
+
+
+        $('#postCreateForm').on('submit', function(e){
             e.preventDefault();
+            let title = $('#title').val();
             $.ajax({
-                url: '{{ route('post.store')  }}',
+                url: '{{ route('post.store') }}',
                 type: 'post',
                 data: {
                     _token: '{{ csrf_token() }}',
-                    title: $('#title').val(),
+                    title: title,
                     short_description: $('#short_description').val(),
                     description: $('#description').val(),
                     published_at: $('#published_at').val(),
 
                 },
-                success: function(res){
-                    if(res.status){
+                success: function(response){
+                    if(response.status){
                         Swal.fire({
-                            title: 'Success!',
-                            text: res.message,
                             icon: 'success',
-                        });
-                        $('#title').val('');
-                        $('#short_description').val('');
-                        $('#description').val('');
-                        $('#published_at').val('');
-
-                        $('#closePostCreateModal').trigger('click');
+                            title: 'Success',
+                            text: response.message,
+                        })
                     }else{
                         Swal.fire({
-                            title: 'Error!',
-                            text: res.message,
                             icon: 'error',
-                        });
+                            title: 'Error Occurred',
+                            text: response.message,
+                        })
                     }
+                    $('#title').val('');
+                    $('#short_description').val('');
+                    $('#description').val('');
+                    $('#published_at').val('');
+                    $('#closePostCreateModal').trigger('click');
                 },
-                error: function(err){
-                   let errors = err.responseJSON.errors;
-                   $.each(errors, function(key, val){
-                       console.log(key + 'Error' , val.toString() );
-                        $('#' + key + 'Error').html(val.toString());
-                   });
-                },
-            } );
+                error: function(error){
+                    let errors = error.responseJSON.errors;
+                    $.each(errors, function(key, value){
+                        $('#' + key + 'Error').html(value.toString());
+                    });
+                }
+
+            });
+
        })
+
 
     </script>
 @endsection
