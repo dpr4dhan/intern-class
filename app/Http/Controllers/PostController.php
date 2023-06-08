@@ -75,7 +75,8 @@ class PostController extends Controller
      */
     public function edit(Post $post)
     {
-       return view('post.update', compact('post'));
+        return ['status'=> true, 'post' => $post];
+//       return view('post.update', compact('post'));
     }
 
     /**
@@ -96,9 +97,11 @@ class PostController extends Controller
                 'published_at'=> $request->published_at,
                 'author'=> auth()->user()->id,
             ]);
-            return redirect(route('post.index'))->with('success', 'Successfully updated');
+            return ['status'=> true, 'message' => 'Successfully updated.'];
+//            return redirect(route('post.index'))->with('success', 'Successfully updated');
         }catch(\Exception $ex){
-            return redirect(route('post.index'))->with('error', 'Error occurred while saving');
+            return ['status'=> false, 'message' => 'Error occurred while updating'];
+//            return redirect(route('post.index'))->with('error', 'Error occurred while saving');
         }
     }
 
