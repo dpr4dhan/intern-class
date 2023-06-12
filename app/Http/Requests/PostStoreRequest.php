@@ -19,6 +19,8 @@ class PostStoreRequest extends FormRequest
                 'title'=> ['required', 'max:255'],
                 'short_description' => ['required'],
                 'published_at' => ['required', 'date_format:Y-m-d h:i A'],
+                'caption.*' => ['required'],
+                'photo.*' => ['required_with|caption.*']
             ];
     }
 

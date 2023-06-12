@@ -111,7 +111,10 @@ https://cdn.jsdelivr.net/npm/sweetalert2@11.7.11/dist/sweetalert2.all.min.js
 
         $('#postCreateForm').on('submit', function(e){
             e.preventDefault();
-            let title = $('#title').val();
+
+            let formData =  new FormData($('#postCreateForm')[0]);
+            formData.append('_token', '{{csrf_token()}}');
+
             let post_id = $('#post_id').val();
             let formRoute = '';
             let method = '';
@@ -123,17 +126,13 @@ https://cdn.jsdelivr.net/npm/sweetalert2@11.7.11/dist/sweetalert2.all.min.js
                 formRoute = formRoute.replace(':id', post_id);
                 method = 'patch';
             }
+
             $.ajax({
                 url: formRoute,
                 type: method,
-                data: {
-                    _token: '{{ csrf_token() }}',
-                    title: title,
-                    short_description: $('#short_description').val(),
-                    description: $('#description').val(),
-                    published_at: $('#published_at').val(),
-
-                },
+                data: formData,
+                processData: false,
+                contentType: false,
                 success: function(response){
                     if(response.status){
                         Swal.fire({
@@ -160,6 +159,7 @@ https://cdn.jsdelivr.net/npm/sweetalert2@11.7.11/dist/sweetalert2.all.min.js
                     let errors = error.responseJSON.errors;
                     $.each(errors, function(key, value){
                         console.log(key);
+                        key = key.replace('.', '');
                         $('#' + key + 'Error').html(value.toString());
                     });
                 }
@@ -242,5 +242,40 @@ https://cdn.jsdelivr.net/npm/sweetalert2@11.7.11/dist/sweetalert2.all.min.js
                 }
             })
         });
+
+        $(document).on('click', '#addPhotoBtn', function(e){
+            let i = generateRandomNumber();
+            let html = '<div class="col-6 photoRow_'+ i +'">' +
+                          '<div class="mb-3">' +
+                           '<label for="caption'+ i +'" class="form-label">Caption</label>' +
+                                ' <input type="text" name="caption['+i+']" id="caption'+ i +'" class="form-control" >' +
+                            '<span class="text-danger" id="caption'+ i +'Error"></span>' +
+                        '</div>' +
+                    '</div>' +
+                       ' <div class="col-5 photoRow_'+ i +'">'+
+                           '<div class="mb-3">'+
+                                '<label for="photo'+ i +'" class="form-label">Photo</label>' +
+                               ' <input type="file" name="photo['+i+']" id="photo'+ i +'" class="form-control" >'+
+                                    '<span class="text-danger" id="photo'+ i +'Error"></span>'+
+                           '</div>'+
+                        '</div>' +
+                        '<div class="col-1 photoRow_'+ i +'">' +
+                            '<button data-row="'+ i +'" class="btn btn-danger photoRemoveRow"><i class="fa fa-trash"></i></button>'+
+                        '</div>';
+           $('#add_photo_div').append(html);
+        });
+
+        $(document).on('click', '.photoRemoveRow', function(){
+            let rowId = $(this).attr('data-row');
+            $('.photoRow_'+ rowId).remove();
+        })
+
+        function generateRandomNumber(){
+          let x =   Math.floor((Math.random() * 10000) + 1);
+          if(x == 1){
+              generateRandomNumber();
+          }
+          return x;
+        }
     </script>
 @endsection
