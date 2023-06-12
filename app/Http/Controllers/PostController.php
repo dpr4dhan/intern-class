@@ -6,6 +6,8 @@ use App\Http\Requests\PostStoreRequest;
 use App\Http\Requests\PostUpdateRequest;
 use App\Models\Post;
 use Illuminate\Http\Request;
+use Yajra\DataTables\DataTables;
+use Yajra\DataTables\Services\DataTable;
 
 class PostController extends Controller
 {
@@ -16,8 +18,26 @@ class PostController extends Controller
      */
     public function index()
     {
-        $posts = Post::get();
-        return view('post.index', compact('posts'));
+        return view('post.index');
+    }
+
+    public function getData(){
+        $posts = Post::orderBy('created_at', 'asc')->get();
+        return DataTables::of($posts)
+                    ->addIndexColumn()
+                    ->addColumn('authorName', function($post){
+                        return $post->getAuthor->name;
+                    })
+                    ->addColumn('action', function($post){
+                        $actionButtons = '<button type="button" data-id="'. $post->id .'" class="btn btn-info editButton" data-bs-toggle="modal" data-bs-target="#postCreateModal">
+                                <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
+                            </button>
+
+                            <button data-id="'.$post->id.'" type="button" class="btn btn-danger deleteButton"> <i class="fa fa-trash"></i></button>';
+                        return $actionButtons;
+                    })
+                    ->rawColumns(['action'])
+                    ->make(true);
     }
 
     /**
@@ -115,9 +135,9 @@ class PostController extends Controller
     {
         try{
             $post->delete();
-            return redirect(route('post.index'))->with('success', 'Successfully deleted');
+            return ['status' => true, 'message'=> 'Successfully deleted'];
         }catch(\Exception $ex){
-            return redirect(route('post.index'))->with('error', 'Error occurred while deleting');
+            return ['status' => false, 'message'=> 'Error occurred while deleting'];
         }
 
     }

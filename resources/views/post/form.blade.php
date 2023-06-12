@@ -6,7 +6,8 @@
                 <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form method="post" action="{{route('post.create')}}" id="postCreateForm">
+            <form method="post" action="" id="postCreateForm">
+                <input type="hidden" name="post_id" id="post_id"value="0">
                 <div class="modal-body">
 
                     <div class="mb-3">

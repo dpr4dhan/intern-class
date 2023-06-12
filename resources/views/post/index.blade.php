@@ -29,27 +29,24 @@ https://cdn.jsdelivr.net/npm/sweetalert2@11.7.11/dist/sweetalert2.min.css
                     <th>Action</th>
                 </thead>
                 <tbody>
-                    @php $i = 1; @endphp
-                    @foreach($posts as $post)
-                    <tr>
-                        <td> {{ $i++ }}</td>
-                        <td>{{ $post->title }}</td>
-                        <td>{{ $post->short_description }}</td>
-                        <td>{{$post->getAuthor->name}}</td>
-                        <td> {{ $post->published_at }}</td>
-                        <td>
-                            <button type="button" data-id="{{$post->id}}" class="btn btn-info editButton" data-bs-toggle="modal" data-bs-target="#postUpdateModal">
-                                <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
-                            </button>
+{{--                    @php $i = 1; @endphp--}}
+{{--                    @foreach($posts as $post)--}}
+{{--                    <tr>--}}
+{{--                        <td> {{ $i++ }}</td>--}}
+{{--                        <td>{{ $post->title }}</td>--}}
+{{--                        <td>{{ $post->short_description }}</td>--}}
+{{--                        <td>{{$post->getAuthor->name}}</td>--}}
+{{--                        <td> {{ $post->published_at }}</td>--}}
+{{--                        <td>--}}
+{{--                            <button type="button" data-id="{{$post->id}}" class="btn btn-info editButton" data-bs-toggle="modal" data-bs-target="#postCreateModal">--}}
+{{--                                <i class="fa fa-pencil-square-o" aria-hidden="true"></i>--}}
+{{--                            </button>--}}
 
-                            <form action="{{route('post.destroy', $post->id)}}" method="post">
-                                @csrf @method('delete')
-                                <button type="submit" class="btn btn-danger"> <i class="fa fa-trash"></i></button>
-                            </form>
+{{--                            <button data-id="{{$post->id}}" type="button" class="btn btn-danger deleteButton"> <i class="fa fa-trash"></i></button>--}}
 
-                        </td>
-                    </tr>
-                    @endforeach
+{{--                        </td>--}}
+{{--                    </tr>--}}
+{{--                    @endforeach--}}
                 </tbody>
 
             </table>
@@ -58,8 +55,6 @@ https://cdn.jsdelivr.net/npm/sweetalert2@11.7.11/dist/sweetalert2.min.css
 
 </div>
     @include('post.form')
-    @include('post.update')
-
 
 @endsection
 
@@ -71,7 +66,36 @@ https://cdn.jsdelivr.net/npm/sweetalert2@11.7.11/dist/sweetalert2.min.css
 https://cdn.jsdelivr.net/npm/sweetalert2@11.7.11/dist/sweetalert2.all.min.js
 "></script>
     <script>
-        let table = new DataTable('#postTable');
+        let table = new DataTable('#postTable', {
+            paging: true,
+            serverSide: true,
+            pageLength: 10,
+            "ajax" : {
+                url : '{{route('post.getData')}}',
+                type: 'get',
+
+            },
+            columns: [
+                {
+                    data: 'DT_RowIndex'
+                },
+                {
+                   data:  'title'
+                },
+                {
+                    data: 'short_description',
+                },
+                {
+                  data: 'authorName'
+                },
+                {
+                    data: 'published_at',
+                },
+                {
+                    data: 'action',
+                }
+            ]
+        });
 
         // $.ajaxSetup({
         //     headers: {
@@ -88,9 +112,20 @@ https://cdn.jsdelivr.net/npm/sweetalert2@11.7.11/dist/sweetalert2.all.min.js
         $('#postCreateForm').on('submit', function(e){
             e.preventDefault();
             let title = $('#title').val();
+            let post_id = $('#post_id').val();
+            let formRoute = '';
+            let method = '';
+            if(post_id == 0){
+                formRoute = '{{ route('post.store') }}';
+                method = 'post';
+            }else{
+                formRoute = '{{route('post.update', ':id')}}';
+                formRoute = formRoute.replace(':id', post_id);
+                method = 'patch';
+            }
             $.ajax({
-                url: '{{ route('post.store') }}',
-                type: 'post',
+                url: formRoute,
+                type: method,
                 data: {
                     _token: '{{ csrf_token() }}',
                     title: title,
@@ -113,10 +148,12 @@ https://cdn.jsdelivr.net/npm/sweetalert2@11.7.11/dist/sweetalert2.all.min.js
                             text: response.message,
                         })
                     }
+                    table.ajax.reload();
                     $('#title').val('');
                     $('#short_description').val('');
                     $('#description').val('');
                     $('#published_at').val('');
+                    $('#post_id').val('0');
                     $('#closePostCreateModal').trigger('click');
                 },
                 error: function(error){
@@ -137,10 +174,6 @@ https://cdn.jsdelivr.net/npm/sweetalert2@11.7.11/dist/sweetalert2.all.min.js
             let editRoute = '{{route('post.edit', ':id')}}';
             editRoute = editRoute.replace(':id', id);
 
-            let updateRoute = '{{route('post.update', ':id')}}';
-            updateRoute = updateRoute.replace(':id', id);
-            $('#postUpdateForm').attr('action', updateRoute);
-
             $.ajax({
                 url: editRoute,
                 type: 'get',
@@ -148,10 +181,11 @@ https://cdn.jsdelivr.net/npm/sweetalert2@11.7.11/dist/sweetalert2.all.min.js
                     if(res.status){
                         let post = res.post;
                         console.log(post);
-                        $('#update_title').val(post.title);
-                        $('#update_short_description').val(post.short_description);
-                        $('#update_description').val(post.description);
-                        $('#update_published_at').val(post.published_at);
+                        $('#title').val(post.title);
+                        $('#short_description').val(post.short_description);
+                        $('#description').val(post.description);
+                        $('#published_at').val(post.published_at);
+                        $('#post_id').val(id);
                     }
                 },
                 error: function(err){
@@ -164,53 +198,49 @@ https://cdn.jsdelivr.net/npm/sweetalert2@11.7.11/dist/sweetalert2.all.min.js
             });
         })
 
-        $('#postUpdateForm').on('submit', function(e){
-            e.preventDefault();
-            let updateRoute = $('#postUpdateForm').attr('action');
-            let title = $('#update_title').val();
-            $.ajax({
-                url: updateRoute,
-                type: 'put',
-                data: {
-                    _token: '{{ csrf_token() }}',
-                    title: title,
-                    short_description: $('#update_short_description').val(),
-                    description: $('#update_description').val(),
-                    published_at: $('#update_published_at').val(),
-
-                },
-                success: function(response){
-                    if(response.status){
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success',
-                            text: response.message,
-                        })
-                    }else{
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error Occurred',
-                            text: response.message,
-                        })
-                    }
-                    $('#update_title').val('');
-                    $('#update_short_description').val('');
-                    $('#update_description').val('');
-                    $('#update_published_at').val('');
-                    $('#postUpdateForm').attr('action', '');
-                    $('#closePostUpdateModal').trigger('click');
-                },
-                error: function(error){
-                    let errors = error.responseJSON.errors;
-                    $.each(errors, function(key, value){
-                        $('#update_' + key + 'Error').html(value.toString());
+        $(document).on('click', '.deleteButton', function(e){
+            let id = $(this).attr('data-id');
+            let deleteRoute = '{{route('post.destroy', ':id')}}';
+            deleteRoute = deleteRoute.replace(':id', id);
+            Swal.fire({
+                icon: 'warning',
+                title: 'Do you want to delete the post?',
+                showCancelButton: true,
+                confirmButtonText: 'Yes',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                       url: deleteRoute,
+                        data: {
+                           _token: '{{csrf_token()}}'
+                        },
+                       type: 'delete',
+                       success:function(res){
+                           if(res.status){
+                               Swal.fire({
+                                   icon: 'success',
+                                   title: 'Success',
+                                   text: res.message,
+                               })
+                               table.ajax.reload();
+                           }else{
+                               Swal.fire({
+                                   icon: 'error',
+                                   title: 'Error Occurred',
+                                   text: res.message,
+                               })
+                           }
+                       },
+                        error:function(err){
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error Occurred',
+                                text: res.message,
+                            })
+                        }
                     });
                 }
-
-            });
-
-
-        })
-
+            })
+        });
     </script>
 @endsection
