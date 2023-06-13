@@ -25,28 +25,11 @@ https://cdn.jsdelivr.net/npm/sweetalert2@11.7.11/dist/sweetalert2.min.css
                     <th>Title</th>
                     <th>Short Description</th>
                     <th>Author</th>
+                    <th>Photos</th>
                     <th>Published Date</th>
                     <th>Action</th>
                 </thead>
                 <tbody>
-{{--                    @php $i = 1; @endphp--}}
-{{--                    @foreach($posts as $post)--}}
-{{--                    <tr>--}}
-{{--                        <td> {{ $i++ }}</td>--}}
-{{--                        <td>{{ $post->title }}</td>--}}
-{{--                        <td>{{ $post->short_description }}</td>--}}
-{{--                        <td>{{$post->getAuthor->name}}</td>--}}
-{{--                        <td> {{ $post->published_at }}</td>--}}
-{{--                        <td>--}}
-{{--                            <button type="button" data-id="{{$post->id}}" class="btn btn-info editButton" data-bs-toggle="modal" data-bs-target="#postCreateModal">--}}
-{{--                                <i class="fa fa-pencil-square-o" aria-hidden="true"></i>--}}
-{{--                            </button>--}}
-
-{{--                            <button data-id="{{$post->id}}" type="button" class="btn btn-danger deleteButton"> <i class="fa fa-trash"></i></button>--}}
-
-{{--                        </td>--}}
-{{--                    </tr>--}}
-{{--                    @endforeach--}}
                 </tbody>
 
             </table>
@@ -89,6 +72,9 @@ https://cdn.jsdelivr.net/npm/sweetalert2@11.7.11/dist/sweetalert2.all.min.js
                   data: 'authorName'
                 },
                 {
+                    data: 'photos',
+                },
+                {
                     data: 'published_at',
                 },
                 {
@@ -114,6 +100,16 @@ https://cdn.jsdelivr.net/npm/sweetalert2@11.7.11/dist/sweetalert2.all.min.js
 
             let formData =  new FormData($('#postCreateForm')[0]);
             formData.append('_token', '{{csrf_token()}}');
+
+
+            formData.forEach(function(val, key){
+              if(key.includes('photo')){
+                  if(val.name == ''){
+                      formData.set(key, '');
+                  }
+              }
+            });
+
 
             let post_id = $('#post_id').val();
             let formRoute = '';
@@ -158,7 +154,6 @@ https://cdn.jsdelivr.net/npm/sweetalert2@11.7.11/dist/sweetalert2.all.min.js
                 error: function(error){
                     let errors = error.responseJSON.errors;
                     $.each(errors, function(key, value){
-                        console.log(key);
                         key = key.replace('.', '');
                         $('#' + key + 'Error').html(value.toString());
                     });

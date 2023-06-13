@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Http\Requests\PostStoreRequest;
 use App\Http\Requests\PostUpdateRequest;
 use App\Models\Post;
+use App\Models\PostHasPhoto;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\DataTables;
 use Yajra\DataTables\Services\DataTable;
 
@@ -28,6 +30,18 @@ class PostController extends Controller
                     ->addColumn('authorName', function($post){
                         return $post->getAuthor->name;
                     })
+                    ->addColumn('photos', function($post){
+                        $photos = $post->photos;
+                        if(!empty($photos)){
+                            $imgs = '';
+                            foreach($photos as $pht){
+                                $imgs .= '<label>'.$pht->caption.'</label><img src="'. asset('storage/'.$pht->photo) .'" alt="'.$pht->caption.'"/>';
+                            }
+                            return $imgs;
+                        }else{
+                            return '-';
+                        }
+                    })
                     ->addColumn('action', function($post){
                         $actionButtons = '<button type="button" data-id="'. $post->id .'" class="btn btn-info editButton" data-bs-toggle="modal" data-bs-target="#postCreateModal">
                                 <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
@@ -36,7 +50,7 @@ class PostController extends Controller
                             <button data-id="'.$post->id.'" type="button" class="btn btn-danger deleteButton"> <i class="fa fa-trash"></i></button>';
                         return $actionButtons;
                     })
-                    ->rawColumns(['action'])
+                    ->rawColumns(['action', 'photos'])
                     ->make(true);
     }
 
@@ -59,7 +73,7 @@ class PostController extends Controller
     public function store(PostStoreRequest $request)
     {
         try{
-            Post::create([
+            $result = Post::create([
                 'title' => $request->title,
                 'short_description' => $request->short_description,
                 'description' => $request->description,
@@ -67,6 +81,20 @@ class PostController extends Controller
                 'author'=> auth()->user()->id,
                 'published_at'=> $request->published_at
             ]);
+
+            $captions = $request->caption;
+            $photos = $request->photo;
+            foreach($captions as $key =>$value){
+                $path = Storage::putFileAs('public/photos', $photos[$key], $photos[$key]->getClientOriginalName());
+                $new_path = 'photos/'.$photos[$key]->getClientOriginalName();
+                PostHasPhoto::create([
+                    'caption' => $value,
+                    'photo' => $new_path,
+                    'post_id' => $result->id
+                ]);
+            }
+
+
             return ['status'=> true, 'message' => 'Successfully added'];
 
 //            return redirect(route('post.index'))->with('success', 'Successfully added');

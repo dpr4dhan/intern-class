@@ -18,4 +18,7 @@ class Post extends Model
        return $this->hasOne(User::class, 'id', 'author');
     }
 
+    public function photos(){
+        return $this->hasMany(PostHasPhoto::class, 'post_id', 'id');
+    }
 }
