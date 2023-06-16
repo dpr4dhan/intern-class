@@ -19,12 +19,15 @@ class PostUpdateRequest extends FormRequest
                 'title'=> ['required', 'max:255'],
                 'short_description' => ['required'],
                 'published_at' => ['required', 'date_format:Y-m-d h:i A'],
+                'caption.*' => ['required'],
+                'photo.*' => ['required_without:selected_photo.*']
             ];
     }
 
     public function messages(){
        return [
             'required' => 'Required.',
+            'required_without' => 'Required.'
         ];
     }
 }

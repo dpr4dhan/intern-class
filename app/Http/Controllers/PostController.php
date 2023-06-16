@@ -7,6 +7,7 @@ use App\Http\Requests\PostUpdateRequest;
 use App\Models\Post;
 use App\Models\PostHasPhoto;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\DataTables;
 use Yajra\DataTables\Services\DataTable;
@@ -123,6 +124,7 @@ class PostController extends Controller
      */
     public function edit(Post $post)
     {
+        $post->photos;
         return ['status'=> true, 'post' => $post];
 //       return view('post.update', compact('post'));
     }
@@ -136,6 +138,7 @@ class PostController extends Controller
      */
     public function update(PostUpdateRequest $request, Post $post)
     {
+//        dd($request->all());
         try{
             $post->update([
                 'title' => $request->title,
@@ -145,9 +148,39 @@ class PostController extends Controller
                 'published_at'=> $request->published_at,
                 'author'=> auth()->user()->id,
             ]);
+
+            $captions = $request->caption;
+            $photos = $request->photo;
+            $selected_photos = $request->selected_photo;
+
+            //delete old photos of the post if present
+            $old_photos_count  = $post->photos->count();
+            if($old_photos_count > 0)
+            {
+                $post->photos()->delete();
+//                foreach($post->photos as $photo)
+            }
+
+            //save new photos
+            foreach($captions as $key =>$value){
+                if(isset($selected_photos[$key]) && !empty($selected_photos[$key])){
+                    $new_path = $selected_photos[$key];
+                }else{
+                    $path = Storage::putFileAs('public/photos', $photos[$key], $photos[$key]->getClientOriginalName());
+                    $new_path = 'photos/'.$photos[$key]->getClientOriginalName();
+                }
+
+                PostHasPhoto::create([
+                    'caption' => $value,
+                    'photo' => $new_path,
+                    'post_id' => $post->id
+                ]);
+            }
+
             return ['status'=> true, 'message' => 'Successfully updated.'];
 //            return redirect(route('post.index'))->with('success', 'Successfully updated');
         }catch(\Exception $ex){
+            Log::error($ex);
             return ['status'=> false, 'message' => 'Error occurred while updating'];
 //            return redirect(route('post.index'))->with('error', 'Error occurred while saving');
         }
@@ -162,6 +195,10 @@ class PostController extends Controller
     public function destroy(Post $post)
     {
         try{
+            $old_photos_count = $post->photos->count();
+            if($old_photos_count> 0 ){
+                $post->photos()->delete();
+            }
             $post->delete();
             return ['status' => true, 'message'=> 'Successfully deleted'];
         }catch(\Exception $ex){

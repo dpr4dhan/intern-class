@@ -25,7 +25,6 @@ https://cdn.jsdelivr.net/npm/sweetalert2@11.7.11/dist/sweetalert2.min.css
                     <th>Title</th>
                     <th>Short Description</th>
                     <th>Author</th>
-                    <th>Photos</th>
                     <th>Published Date</th>
                     <th>Action</th>
                 </thead>
@@ -72,9 +71,6 @@ https://cdn.jsdelivr.net/npm/sweetalert2@11.7.11/dist/sweetalert2.all.min.js
                   data: 'authorName'
                 },
                 {
-                    data: 'photos',
-                },
-                {
                     data: 'published_at',
                 },
                 {
@@ -83,11 +79,11 @@ https://cdn.jsdelivr.net/npm/sweetalert2@11.7.11/dist/sweetalert2.all.min.js
             ]
         });
 
-        // $.ajaxSetup({
-        //     headers: {
-        //         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        //     }
-        // });
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
+        });
 
         $('#published_at').datetimepicker({
             format: 'YYYY-MM-DD hh:MM A'
@@ -103,6 +99,7 @@ https://cdn.jsdelivr.net/npm/sweetalert2@11.7.11/dist/sweetalert2.all.min.js
 
 
             formData.forEach(function(val, key){
+                console.log(val, key);
               if(key.includes('photo')){
                   if(val.name == ''){
                       formData.set(key, '');
@@ -120,13 +117,15 @@ https://cdn.jsdelivr.net/npm/sweetalert2@11.7.11/dist/sweetalert2.all.min.js
             }else{
                 formRoute = '{{route('post.update', ':id')}}';
                 formRoute = formRoute.replace(':id', post_id);
-                method = 'patch';
+                formData.append('_method', 'patch');
+                method = 'post';
             }
 
             $.ajax({
                 url: formRoute,
                 type: method,
                 data: formData,
+                cache: false,
                 processData: false,
                 contentType: false,
                 success: function(response){
@@ -181,6 +180,32 @@ https://cdn.jsdelivr.net/npm/sweetalert2@11.7.11/dist/sweetalert2.all.min.js
                         $('#description').val(post.description);
                         $('#published_at').val(post.published_at);
                         $('#post_id').val(id);
+
+                        let photos = post.photos;
+                        let html ='';
+                        $(photos).each(function(key, value){
+                            let i = generateRandomNumber();
+                            html += '<div class="col-6 photoRow_'+ i +'">' +
+                                        '<div class="mb-3">' +
+                                            '<label for="caption'+ i +'" class="form-label">Caption</label>' +
+                                            ' <input type="text" name="caption['+i+']" id="caption'+ i +'" class="form-control"  value="'+ value.caption +'">' +
+                                            '<span class="text-danger" id="caption'+ i +'Error"></span>' +
+                                        '</div>' +
+                                    '</div>' +
+                                    '<div class="col-5 photoRow_'+ i +'">'+
+                                        '<div class="mb-3">'+
+                                            '<label for="photo'+ i +'" class="form-label">Photo</label>' +
+                                            ' <input type="file" name="photo['+i+']" id="photo'+ i +'" class="form-control" >'+
+                                            '<img src="{{ asset('storage/') }}/' + value.photo +'" alt="'+ value.photo +'"/>' +
+                                            '<input type="hidden" name="selected_photo['+i+']" id="selected_photo'+ i +'" value="'+ value.photo +'" >' +
+                                            '<span class="text-danger" id="photo'+ i +'Error"></span>'+
+                                        '</div>'+
+                                    '</div>' +
+                                    '<div class="col-1 photoRow_'+ i +'">' +
+                                        '<button data-row="'+ i +'" class="btn btn-danger photoRemoveRow"><i class="fa fa-trash"></i></button>'+
+                                    '</div>';
+                        });
+                        $('#edit_photo_div').append(html);
                     }
                 },
                 error: function(err){
@@ -263,6 +288,17 @@ https://cdn.jsdelivr.net/npm/sweetalert2@11.7.11/dist/sweetalert2.all.min.js
         $(document).on('click', '.photoRemoveRow', function(){
             let rowId = $(this).attr('data-row');
             $('.photoRow_'+ rowId).remove();
+        })
+
+        //for modal hidden event
+        $(document).on('hidden.bs.modal', '#postCreateModal', function(){
+            $('#title').val('');
+            $('#short_description').val('');
+            $('#description').val('');
+            $('#published_at').val('');
+            $('#post_id').val('0');
+            $('#edit_photo_div').html('');
+            $('#add_photo_div').html('');
         })
 
         function generateRandomNumber(){

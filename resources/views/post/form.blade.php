@@ -1,5 +1,5 @@
 <!-- Modal -->
-<div class="modal fade" id="postCreateModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<div class="modal fade" id="postCreateModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
@@ -44,23 +44,27 @@
                         <hr>
                     </div>
                     <h4>Add Photos: </h4>
+                    <div class="row" id="edit_photo_div"></div>
                     <div class="row">
                         <div class="offset-10 col-2">
                             <button type="button" id="addPhotoBtn" class="btn btn-info">Add More</button>
                         </div>
-                        <div class="col-6">
+                        <div class="col-6 photoRow_1">
                             <div class="mb-3">
                                 <label for="caption1" class="form-label">Caption</label>
                                 <input type="text" name="caption[1]" id="caption1" class="form-control" >
                                 <span class="text-danger" id="caption1Error"></span>
                             </div>
                         </div>
-                        <div class="col-6">
+                        <div class="col-5 photoRow_1">
                             <div class="mb-3">
                                 <label for="photo1" class="form-label">Photo</label>
                                 <input type="file" name="photo[1]" id="photo1" class="form-control" >
                                 <span class="text-danger" id="photo1Error"></span>
                             </div>
+                        </div>
+                        <div class="col-1 photoRow_1">
+                            <button data-row="1" class="btn btn-danger photoRemoveRow"><i class="fa fa-trash"></i></button>
                         </div>
                     </div>
                     <div class="row" id="add_photo_div"></div>
