@@ -21,4 +21,8 @@ class Post extends Model
     public function photos(){
         return $this->hasMany(PostHasPhoto::class, 'post_id', 'id');
     }
+
+    public function getLike(){
+        return $this->hasOne(PostHasLike::class, 'post_id', 'id');
+    }
 }
