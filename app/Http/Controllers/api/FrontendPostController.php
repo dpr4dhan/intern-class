@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\TestMail;
 use App\Models\Post;
 use App\Models\PostHasLike;
+use Illuminate\Support\Facades\Mail;
 
 /**
  * Class FrontendPostController
@@ -74,5 +76,14 @@ class FrontendPostController extends Controller
         }catch(\Exception $ex){
 
         }
+    }
+
+
+    public function sendTestMail(){
+        $post = Post::find(40);
+        Mail::to('dpr4dhan@gmail.com')->send(new TestMail($post));
+        return response()->json([
+            'status' => true
+        ]);
     }
 }

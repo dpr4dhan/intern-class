@@ -24,3 +24,5 @@ Route::middleware('auth:api')->group(function(){
 });
 
 
+Route::get('/send-test-mail', [FrontendPostController::class, 'sendTestMail'])->name('sendtestmail');
+
